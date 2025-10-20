@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All‑Time NFL Lineup Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --brand: #d32f2f;
+      --brand-dark: #b71c1c;
+    }
+    body { background: #0b0d12; }
+
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      backdrop-filter: blur(8px) saturate(140%);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+
+    .field {
+      position: relative;
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.2)),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.12) 0 2px, transparent 2px 50px),
+        #1f7a45;
+      box-shadow: inset 0 20px 60px rgba(0,0,0,.4);
+    }
+
+    .pos {
+      position: absolute;
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      text-align: center;
+      cursor: pointer; user-select: none;
+      outline: 2px solid rgba(255,255,255,.1);
+      transition: background .15s ease, box-shadow .15s ease;
+    }
+    .pos:hover { box-shadow: 0 0 12px rgba(255,255,255,.15); }
+
+    .pos .abbr { font-weight: 800; font-size: .9rem; }
+    .pos .name { font-size: .65rem; line-height: .75rem; opacity: .95; }
+  </style>
+</head>
+<body class="min-h-screen text-neutral-100 antialiased">
+  <header class="sticky top-0 z-30 glass">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-xl md:text-2xl font-extrabold">All‑Time Lineup Builder</h1>
+      <div class="flex gap-2">
+        <button id="exportBtn" class="px-3 py-2 rounded bg-[var(--brand)] hover:bg-[var(--brand-dark)] font-semibold">Export JSON</button>
+        <button id="clearBtn" class="px-3 py-2 rounded bg-neutral-700 hover:bg-neutral-600">Clear</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 pb-16">
+    <section class="mt-6">
+      <div id="field" class="field w-full aspect-[2.5/1] max-h-[70vh] mx-auto">
+        <!-- Wider spacing -->
+        <div class="pos left-[3%] top-1/2 -translate-y-1/2 bg-rose-600 text-white" data-slot="WR1" data-accept="WR"><div><div class="abbr">WR</div><div class="name" data-name>Empty</div></div></div>
+        <div class="pos right-[3%] top-1/2 -translate-y-1/2 bg-rose-600 text-white" data-slot="WR2" data-accept="WR"><div><div class="abbr">WR</div><div class="name" data-name>Empty</div></div></div>
+
+        <!-- Offensive line spread wider -->
+        <div class="pos left-1/2 -translate-x-[300px] top-[18%] bg-amber-600 text-white" data-slot="LT" data-accept="T,OT"><div class="abbr">LT</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[210px] top-[18%] bg-amber-600 text-white" data-slot="LG" data-accept="G,OG"><div class="abbr">LG</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[120px] top-[18%] bg-amber-600 text-white" data-slot="C" data-accept="C"><div class="abbr">C</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[30px] top-[18%] bg-amber-600 text-white" data-slot="RG" data-accept="G,OG"><div class="abbr">RG</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 translate-x-[60px] top-[18%] bg-amber-600 text-white" data-slot="RT" data-accept="T,OT"><div class="abbr">RT</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 translate-x-[150px] top-[18%] bg-indigo-600 text-white" data-slot="TE" data-accept="TE"><div class="abbr">TE</div><div class="name" data-name>Empty</div></div>
+
+        <!-- Backfield spaced deeper -->
+        <div class="pos left-1/2 -translate-x-[60px] top-[38%] bg-sky-600 text-white" data-slot="QB" data-accept="QB"><div class="abbr">QB</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[60px] top-[53%] bg-teal-600 text-white" data-slot="FB" data-accept="FB"><div class="abbr">FB</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[60px] top-[68%] bg-emerald-600 text-white" data-slot="HB" data-accept="RB,HB"><div class="abbr">HB</div><div class="name" data-name>Empty</div></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ROSTER_URL = "https://raw.githubusercontent.com/nflverse/nflfastR-roster/master/data/roster.csv";
+
+    function parseCSV(text) {
+      const lines = text.split(/\r?\n/);
+      const header = lines.shift().split(',');
+      const out = [];
+      for (const line of lines) {
+        if (!line) continue;
+        const cells = [];
+        let cur = '', inQ = false;
+        for (let i=0; i<line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+          else if (ch === ',' && !inQ) { cells.push(cur); cur = ''; }
+          else cur += ch;
+        }
+        cells.push(cur);
+        const obj = {}; header.forEach((h,i)=>obj[h]=cells[i]||''); out.push(obj);
+      }
+      return out;
+    }
+
+    const acceptMap = { QB:new Set(['QB']), HB:new Set(['RB','HB']), FB:new Set(['FB']), WR1:new Set(['WR']), WR2:new Set(['WR']), TE:new Set(['TE']), LT:new Set(['T','OT']), LG:new Set(['G','OG']), C:new Set(['C']), RG:new Set(['G','OG']), RT:new Set(['T','OT']) };
+
+    const state={pool:[],bySlot:{},currentSlot:null};
+
+    async function bootstrap(){
+      const res=await fetch(ROSTER_URL); const text=await res.text(); const rows=parseCSV(text);
+      const map=new Map();
+      for(const r of rows){const n=(r.full_name||r.player_name||'').trim();const p=(r.position||'').trim();if(!n||!p)continue;const k=n+'|'+p;const s=r.season||'';if(!map.has(k))map.set(k,{name:n,position:p,seasons:s});}
+      state.pool=[...map.values()].map(p=>({...p,name_l:p.name.toLowerCase()}));
+      document.querySelectorAll('.pos').forEach(el=>el.addEventListener('click',()=>openPicker(el.dataset.slot)));
+    }
+
+    function openPicker(slot){alert(`Feature available soon! Pick for ${slot}`)}
+
+    bootstrap();
+  </script>
+</body>
+</html>
