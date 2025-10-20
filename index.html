@@ -90,8 +90,12 @@
   <script>
     // Use jsDelivr mirror (reliable CORS)
     const ROSTER_URLS = [
+      // Multiple mirrors & files from nflverse to maximize success
       "https://cdn.jsdelivr.net/gh/nflverse/nflfastR-roster/data/roster.csv",
-      "https://raw.githubusercontent.com/nflverse/nflfastR-roster/master/data/roster.csv"
+      "https://raw.githubusercontent.com/nflverse/nflfastR-roster/master/data/roster.csv",
+      // Players master (sometimes smaller/more stable)
+      "https://raw.githubusercontent.com/nflverse/nflfastR-roster/master/data/players.csv",
+      "https://cdn.jsdelivr.net/gh/nflverse/nflfastR-roster/data/players.csv"
     ];
 
     // CSV parser that handles quotes/commas
@@ -142,18 +146,69 @@
       throw lastErr || new Error('All sources failed');
     }
 
+    const CACHE_KEY = 'nfl_lineup_players_v2';
+    const CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+
+    async function fetchFirstWorking(urls){
+      let lastErr;
+      for (const u of urls){
+        try {
+          const res = await fetch(u, {cache:'force-cache', mode:'cors'});
+          if (!res.ok) throw new Error('HTTP '+res.status);
+          const txt = await res.text();
+          if (!txt || txt.length < 500) throw new Error('Unexpected small file');
+          return {txt, src:u};
+        } catch(e){ lastErr = e; }
+      }
+      throw lastErr || new Error('All sources failed');
+    }
+
+    function normalizeRows(rows){
+      // Accept either roster.csv or players.csv shapes
+      const map = new Map();
+      for (const r of rows){
+        const name = (r.full_name || r.player_name || r.name || '').trim();
+        const pos  = (r.position || r.pos || '').trim();
+        // Seasons may be split; best-effort merge
+        const season = (r.season || r.seasons || r.years_active || '').toString();
+        if (!name) continue; // keep even if position is missing
+        const p = { name, position: pos || '—', seasons: season };
+        const key = name + '|' + p.position;
+        if (!map.has(key)) map.set(key, p);
+      }
+      return [...map.values()].map(p => ({...p, name_l: p.name.toLowerCase()}));
+    }
+
+    function readCache(){
+      try{
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const {ts, pool} = JSON.parse(raw);
+        if (!Array.isArray(pool)) return null;
+        if (Date.now() - ts > CACHE_TTL_MS) return null;
+        return pool;
+      } catch { return null; }
+    }
+
+    function writeCache(pool){
+      try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), pool})); } catch {}
+    }
+
     async function bootstrap(){
       try{
-        els.status.textContent='Loading roster…';
-        els.status.classList.remove('hidden');
-        // Try multiple mirrors; fall back to a tiny built-in list
-        let text;
-        try {
-          text = await fetchFirstWorking(ROSTER_URLS);
-        } catch(e){
-          console.warn('Remote roster failed, using fallback', e);
-          // Minimal fallback CSV: full_name,position,season
-          text = 'full_name,position,season
+        // 1) Cache first
+        const cached = readCache();
+        if (cached) {
+          state.pool = cached; els.poolCount.textContent = `Loaded players: ${state.pool.length.toLocaleString()} (cached)`;
+        } else {
+          // 2) Download from any working source
+          els.status.textContent='Loading roster…'; els.status.classList.remove('hidden');
+          let text, src;
+          try {
+            const res = await fetchFirstWorking(ROSTER_URLS); text = res.txt; src = res.src;
+          } catch(e){
+            console.warn('Remote roster failed, using fallback', e);
+            text = 'full_name,position,season
 Tom Brady,QB,2000-2022
 Joe Montana,QB,1979-1994
 Peyton Manning,QB,1998-2015
@@ -165,26 +220,20 @@ Rob Gronkowski,TE,2010-2021
 Jason Kelce,C,2011-2023
 Anthony Munoz,T,1980-1992
 Larry Allen,G,1994-2007';
+          }
+          const rows = parseCSV(text);
+          state.pool = normalizeRows(rows);
+          writeCache(state.pool);
+          els.status.classList.add('hidden');
+          els.poolCount.textContent = `Loaded players: ${state.pool.length.toLocaleString()}${src? ' • '+(new URL(src)).hostname:''}`;
         }
-        const rows = parseCSV(text);
-        const map = new Map();
-        for (const r of rows){
-          const name = (r.full_name || r.player_name || '').trim();
-          const pos  = (r.position || '').trim();
-          if (!name || !pos) continue;
-          const key = name+'|'+pos;
-          const season = (r.season || r.seasons || '').toString();
-          if (!map.has(key)) map.set(key, { name, position: pos, seasons: season });
-        }
-        state.pool = [...map.values()].map(p=>({...p, name_l: p.name.toLowerCase()}));
-        els.poolCount.textContent = `Loaded players: ${state.pool.length.toLocaleString()}`;
-        els.status.classList.add('hidden');
+
+        // Wire events
         document.querySelectorAll('.pos').forEach(el=> el.addEventListener('click',()=>openPicker(el.dataset.slot)) );
         updateLineupList();
       } catch(e){
         console.error(e);
-        els.status.textContent='Failed to load roster data.';
-        els.status.classList.remove('hidden');
+        els.status.textContent='Failed to load roster data.'; els.status.classList.remove('hidden');
       }
     }
 
