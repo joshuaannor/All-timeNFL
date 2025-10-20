@@ -3,51 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>All‑Time NFL Lineup Builder</title>
+  <title>All-Time NFL Lineup Builder</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --brand: #d32f2f;
-      --brand-dark: #b71c1c;
-    }
-    body { background: #0b0d12; }
-
-    .glass {
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      backdrop-filter: blur(8px) saturate(140%);
-      border: 1px solid rgba(255,255,255,.06);
-    }
-
-    .field {
-      position: relative;
-      border-radius: 24px;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.2)),
-        repeating-linear-gradient(0deg, rgba(255,255,255,.12) 0 2px, transparent 2px 50px),
-        #1f7a45;
-      box-shadow: inset 0 20px 60px rgba(0,0,0,.4);
-    }
-
-    .pos {
-      position: absolute;
-      width: 72px; height: 72px;
-      border-radius: 50%;
-      display: grid; place-items: center;
-      text-align: center;
-      cursor: pointer; user-select: none;
-      outline: 2px solid rgba(255,255,255,.1);
-      transition: background .15s ease, box-shadow .15s ease;
-    }
-    .pos:hover { box-shadow: 0 0 12px rgba(255,255,255,.15); }
-
-    .pos .abbr { font-weight: 800; font-size: .9rem; }
-    .pos .name { font-size: .65rem; line-height: .75rem; opacity: .95; }
+    :root { --brand:#d32f2f; --brand-dark:#b71c1c; }
+    body { background:#0b0d12; }
+    .glass { background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02)); backdrop-filter:blur(8px) saturate(140%); border:1px solid rgba(255,255,255,.06); }
+    .field { position:relative; border-radius:24px; background: linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.2)), repeating-linear-gradient(0deg,rgba(255,255,255,.12) 0 2px,transparent 2px 50px), #1f7a45; box-shadow: inset 0 20px 60px rgba(0,0,0,.4); }
+    .pos { position:absolute; width:74px; height:74px; border-radius:50%; display:grid; place-items:center; text-align:center; cursor:pointer; user-select:none; outline:2px solid rgba(255,255,255,.1); transition: box-shadow .15s ease; }
+    .pos:hover { box-shadow:0 0 12px rgba(255,255,255,.15); }
+    .pos .abbr { font-weight:800; font-size:.9rem; }
+    .pos .name { font-size:.65rem; line-height:.75rem; opacity:.95; }
+    dialog::backdrop { background:rgba(0,0,0,.65); }
+    dialog { border:0; border-radius:18px; padding:0; max-width:760px; width:calc(100% - 2rem); }
+    .listItem { cursor:pointer; }
+    .listItem:hover { background:rgba(255,255,255,.06); }
   </style>
 </head>
 <body class="min-h-screen text-neutral-100 antialiased">
   <header class="sticky top-0 z-30 glass">
     <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-      <h1 class="text-xl md:text-2xl font-extrabold">All‑Time Lineup Builder</h1>
+      <h1 class="text-xl md:text-2xl font-extrabold">All-Time Lineup Builder</h1>
       <div class="flex gap-2">
         <button id="exportBtn" class="px-3 py-2 rounded bg-[var(--brand)] hover:bg-[var(--brand-dark)] font-semibold">Export JSON</button>
         <button id="clearBtn" class="px-3 py-2 rounded bg-neutral-700 hover:bg-neutral-600">Clear</button>
@@ -57,63 +33,96 @@
 
   <main class="max-w-6xl mx-auto px-4 pb-16">
     <section class="mt-6">
-      <div id="field" class="field w-full aspect-[2.5/1] max-h-[70vh] mx-auto">
-        <!-- Wider spacing -->
-        <div class="pos left-[3%] top-1/2 -translate-y-1/2 bg-rose-600 text-white" data-slot="WR1" data-accept="WR"><div><div class="abbr">WR</div><div class="name" data-name>Empty</div></div></div>
-        <div class="pos right-[3%] top-1/2 -translate-y-1/2 bg-rose-600 text-white" data-slot="WR2" data-accept="WR"><div><div class="abbr">WR</div><div class="name" data-name>Empty</div></div></div>
+      <div id="field" class="field w-full aspect-[2.6/1] max-h-[70vh] mx-auto">
+        <!-- WRs (pushed farther wide) -->
+        <div class="pos left-[2.5%] top-1/2 -translate-y-1/2 bg-rose-600 text-white" data-slot="WR1" data-accept="WR"><div><div class="abbr">WR</div><div class="name" data-name>Empty</div></div></div>
+        <div class="pos right-[2.5%] top-1/2 -translate-y-1/2 bg-rose-600 text-white" data-slot="WR2" data-accept="WR"><div><div class="abbr">WR</div><div class="name" data-name>Empty</div></div></div>
 
-        <!-- Offensive line spread wider -->
-        <div class="pos left-1/2 -translate-x-[300px] top-[18%] bg-amber-600 text-white" data-slot="LT" data-accept="T,OT"><div class="abbr">LT</div><div class="name" data-name>Empty</div></div>
-        <div class="pos left-1/2 -translate-x-[210px] top-[18%] bg-amber-600 text-white" data-slot="LG" data-accept="G,OG"><div class="abbr">LG</div><div class="name" data-name>Empty</div></div>
-        <div class="pos left-1/2 -translate-x-[120px] top-[18%] bg-amber-600 text-white" data-slot="C" data-accept="C"><div class="abbr">C</div><div class="name" data-name>Empty</div></div>
-        <div class="pos left-1/2 -translate-x-[30px] top-[18%] bg-amber-600 text-white" data-slot="RG" data-accept="G,OG"><div class="abbr">RG</div><div class="name" data-name>Empty</div></div>
-        <div class="pos left-1/2 translate-x-[60px] top-[18%] bg-amber-600 text-white" data-slot="RT" data-accept="T,OT"><div class="abbr">RT</div><div class="name" data-name>Empty</div></div>
-        <div class="pos left-1/2 translate-x-[150px] top-[18%] bg-indigo-600 text-white" data-slot="TE" data-accept="TE"><div class="abbr">TE</div><div class="name" data-name>Empty</div></div>
+        <!-- Offensive line (spread more) -->
+        <div class="pos left-1/2 -translate-x-[340px] top-[16%] bg-amber-600 text-white" data-slot="LT" data-accept="T,OT"><div class="abbr">LT</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[250px] top-[16%] bg-amber-600 text-white" data-slot="LG" data-accept="G,OG"><div class="abbr">LG</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[160px] top-[16%] bg-amber-600 text-white" data-slot="C" data-accept="C"><div class="abbr">C</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[70px]  top-[16%] bg-amber-600 text-white" data-slot="RG" data-accept="G,OG"><div class="abbr">RG</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 translate-x-[20px]  top-[16%] bg-amber-600 text-white" data-slot="RT" data-accept="T,OT"><div class="abbr">RT</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 translate-x-[110px] top-[16%] bg-indigo-600 text-white" data-slot="TE" data-accept="TE"><div class="abbr">TE</div><div class="name" data-name>Empty</div></div>
 
-        <!-- Backfield spaced deeper -->
-        <div class="pos left-1/2 -translate-x-[60px] top-[38%] bg-sky-600 text-white" data-slot="QB" data-accept="QB"><div class="abbr">QB</div><div class="name" data-name>Empty</div></div>
-        <div class="pos left-1/2 -translate-x-[60px] top-[53%] bg-teal-600 text-white" data-slot="FB" data-accept="FB"><div class="abbr">FB</div><div class="name" data-name>Empty</div></div>
-        <div class="pos left-1/2 -translate-x-[60px] top-[68%] bg-emerald-600 text-white" data-slot="HB" data-accept="RB,HB"><div class="abbr">HB</div><div class="name" data-name>Empty</div></div>
+        <!-- Backfield deeper spacing -->
+        <div class="pos left-1/2 -translate-x-[110px] top-[36%] bg-sky-600 text-white" data-slot="QB" data-accept="QB"><div class="abbr">QB</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[110px] top-[53%] bg-teal-600 text-white" data-slot="FB" data-accept="FB"><div class="abbr">FB</div><div class="name" data-name>Empty</div></div>
+        <div class="pos left-1/2 -translate-x-[110px] top-[70%] bg-emerald-600 text-white" data-slot="HB" data-accept="RB,HB"><div class="abbr">HB</div><div class="name" data-name>Empty</div></div>
+      </div>
+    </section>
+
+    <section class="mt-6 grid gap-4 md:grid-cols-3">
+      <div class="glass rounded-2xl p-4">
+        <div class="font-semibold mb-2">Your lineup</div>
+        <ul id="lineupList" class="text-sm space-y-1 text-neutral-300"></ul>
+      </div>
+      <div class="glass rounded-2xl p-4">
+        <div class="font-semibold mb-2">Data source</div>
+        <p class="text-sm text-neutral-300">Powered by the open <a class="underline hover:no-underline" href="https://github.com/nflverse/nflfastR-roster" target="_blank" rel="noreferrer">nflverse / nflfastR roster</a> CSV (client-side only).</p>
+      </div>
+      <div class="glass rounded-2xl p-4">
+        <div class="font-semibold mb-2">Hosting</div>
+        <p class="text-sm text-neutral-300">Save as <span class="font-semibold">index.html</span> → push to GitHub → Settings → Pages → Deploy from branch.</p>
       </div>
     </section>
   </main>
 
+  <!-- Picker Modal -->
+  <dialog id="picker">
+    <div class="bg-neutral-900 text-neutral-50 rounded-2xl p-5 md:p-6">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <h2 id="pickerTitle" class="text-lg font-semibold">Pick player</h2>
+        <button id="closePicker" class="px-3 py-1.5 rounded-lg bg-neutral-700 hover:bg-neutral-600">Close</button>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 text-xs text-neutral-300 mb-3">
+        <span class="px-2 py-1 rounded bg-neutral-800/70">Type to search • min 2 chars</span>
+        <span id="acceptLabel" class="px-2 py-1 rounded bg-neutral-800/70"></span>
+        <span id="poolCount" class="px-2 py-1 rounded bg-neutral-800/70"></span>
+      </div>
+      <input id="searchInput" type="text" placeholder="Search players by name… (e.g., Tom, Rice, Sanders)" class="w-full rounded-xl bg-neutral-800 border border-neutral-700 p-3 outline-none focus:ring-2 focus:ring-[var(--brand)]" />
+      <div id="results" class="mt-3 max-h-[48vh] overflow-auto rounded-xl border border-neutral-800 divide-y divide-neutral-800"></div>
+    </div>
+  </dialog>
+
   <script>
+    // Data source (CSV)
     const ROSTER_URL = "https://raw.githubusercontent.com/nflverse/nflfastR-roster/master/data/roster.csv";
 
-    function parseCSV(text) {
-      const lines = text.split(/\r?\n/);
-      const header = lines.shift().split(',');
-      const out = [];
-      for (const line of lines) {
-        if (!line) continue;
-        const cells = [];
-        let cur = '', inQ = false;
-        for (let i=0; i<line.length; i++) {
-          const ch = line[i];
-          if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
-          else if (ch === ',' && !inQ) { cells.push(cur); cur = ''; }
-          else cur += ch;
-        }
-        cells.push(cur);
-        const obj = {}; header.forEach((h,i)=>obj[h]=cells[i]||''); out.push(obj);
-      }
-      return out;
-    }
+    // Mini CSV parser (handles quotes)
+    function parseCSV(text){
+      const lines=text.split(/\r?\n/); const header=lines.shift().split(','); const out=[];
+      for(const line of lines){ if(!line) continue; const cells=[]; let cur='',q=false; for(let i=0;i<line.length;i++){ const ch=line[i]; if(ch==='"'){ if(q && line[i+1]==='"'){cur+='"'; i++;} else q=!q; } else if(ch===',' && !q){ cells.push(cur); cur=''; } else { cur+=ch; } } cells.push(cur); const obj={}; header.forEach((h,i)=>obj[h]=cells[i]??''); out.push(obj);} return out; }
 
-    const acceptMap = { QB:new Set(['QB']), HB:new Set(['RB','HB']), FB:new Set(['FB']), WR1:new Set(['WR']), WR2:new Set(['WR']), TE:new Set(['TE']), LT:new Set(['T','OT']), LG:new Set(['G','OG']), C:new Set(['C']), RG:new Set(['G','OG']), RT:new Set(['T','OT']) };
+    // Slots -> allowed positions
+    const acceptMap={QB:new Set(['QB']), HB:new Set(['RB','HB']), FB:new Set(['FB']), WR1:new Set(['WR']), WR2:new Set(['WR']), TE:new Set(['TE']), LT:new Set(['T','OT']), LG:new Set(['G','OG']), C:new Set(['C']), RG:new Set(['G','OG']), RT:new Set(['T','OT'])};
 
-    const state={pool:[],bySlot:{},currentSlot:null};
+    const state={pool:[], bySlot:{}, currentSlot:null};
 
-    async function bootstrap(){
-      const res=await fetch(ROSTER_URL); const text=await res.text(); const rows=parseCSV(text);
-      const map=new Map();
-      for(const r of rows){const n=(r.full_name||r.player_name||'').trim();const p=(r.position||'').trim();if(!n||!p)continue;const k=n+'|'+p;const s=r.season||'';if(!map.has(k))map.set(k,{name:n,position:p,seasons:s});}
-      state.pool=[...map.values()].map(p=>({...p,name_l:p.name.toLowerCase()}));
-      document.querySelectorAll('.pos').forEach(el=>el.addEventListener('click',()=>openPicker(el.dataset.slot)));
-    }
+    const els={ picker:document.getElementById('picker'), pickerTitle:document.getElementById('pickerTitle'), acceptLabel:document.getElementById('acceptLabel'), poolCount:document.getElementById('poolCount'), searchInput:document.getElementById('searchInput'), results:document.getElementById('results'), closePicker:document.getElementById('closePicker'), lineupList:document.getElementById('lineupList'), exportBtn:document.getElementById('exportBtn'), clearBtn:document.getElementById('clearBtn') };
 
-    function openPicker(slot){alert(`Feature available soon! Pick for ${slot}`)}
+    function updateLineupList(){ els.lineupList.innerHTML=''; const slots=['LT','LG','C','RG','RT','TE','WR1','WR2','QB','FB','HB']; for(const s of slots){ const li=document.createElement('li'); li.innerHTML=`<span class="text-neutral-400">${s}</span>: <span class="font-medium">${state.bySlot[s]||'—'}</span>`; els.lineupList.appendChild(li);} }
+
+    function setSlotName(slot,name){ state.bySlot[slot]=name; const chip=document.querySelector(`.pos[data-slot="${slot}"] [data-name]`); if(chip) chip.textContent=name; updateLineupList(); }
+
+    function openPicker(slot){ state.currentSlot=slot; els.pickerTitle.textContent=`Pick for ${slot}`; els.acceptLabel.textContent=`Allowed positions: ${[...(acceptMap[slot]||[])].join(', ')}`; els.poolCount.textContent=`Loaded players: ${state.pool.length.toLocaleString()}`; els.searchInput.value=''; els.results.innerHTML=''; if(typeof els.picker.showModal==='function') els.picker.showModal(); else els.picker.setAttribute('open',''); els.searchInput.focus(); }
+    function closePicker(){ els.picker.close(); state.currentSlot=null; }
+
+    function renderResults(items){ els.results.innerHTML=''; const frag=document.createDocumentFragment(); items.slice(0,200).forEach(p=>{ const row=document.createElement('div'); row.className='listItem px-3 py-2 flex items-center justify-between'; row.innerHTML=`<div><div class="font-medium">${p.name}</div><div class="text-xs text-neutral-400">${p.position}${p.seasons? ' • '+p.seasons:''}</div></div><button class="px-2 py-1 text-xs rounded bg-[var(--brand)] hover:bg-[var(--brand-dark)]">Select</button>`; row.querySelector('button').addEventListener('click',()=>{ setSlotName(state.currentSlot,p.name); closePicker(); }); frag.appendChild(row); }); els.results.appendChild(frag); }
+
+    // Debounced search
+    let t=null; function doSearch(q,slot){ if(!q||q.length<2){ els.results.innerHTML=''; return; } q=q.toLowerCase(); const allowed=acceptMap[slot]||new Set(); const res=state.pool.filter(p=> p.name_l.includes(q) && (allowed.size===0 || allowed.has(p.position)) ); renderResults(res); }
+
+    els.searchInput?.addEventListener('input',e=>{ clearTimeout(t); const val=e.target.value; const slot=state.currentSlot; t=setTimeout(()=>doSearch(val,slot),120); });
+    els.closePicker?.addEventListener('click', closePicker);
+
+    // Export / Clear
+    els.exportBtn?.addEventListener('click',()=>{ const data=JSON.stringify(state.bySlot,null,2); const blob=new Blob([data],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='all_time_lineup.json'; a.click(); URL.revokeObjectURL(url); });
+    els.clearBtn?.addEventListener('click',()=>{ if(!confirm('Clear all selections?')) return; state.bySlot={}; document.querySelectorAll('[data-name]').forEach(n=>n.textContent='Empty'); updateLineupList(); });
+
+    // Bootstrap: load roster and wire clicks
+    async function bootstrap(){ try{ const res=await fetch(ROSTER_URL); const text=await res.text(); const rows=parseCSV(text); const map=new Map(); for(const r of rows){ const name=(r.full_name||r.player_name||'').trim(); const pos=(r.position||'').trim(); if(!name||!pos) continue; const key=name+'|'+pos; const season=r.season||r.seasons||''; if(!map.has(key)) map.set(key,{name, position:pos, seasons:season}); } state.pool=[...map.values()].map(p=>({...p,name_l:p.name.toLowerCase()})); document.querySelectorAll('.pos').forEach(el=> el.addEventListener('click',()=>openPicker(el.dataset.slot)) ); updateLineupList(); } catch(e){ console.error(e); alert('Failed to load roster data.'); } }
 
     bootstrap();
   </script>
