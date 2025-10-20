@@ -89,7 +89,10 @@
 
   <script>
     // Use jsDelivr mirror (reliable CORS)
-    const ROSTER_URL = "https://cdn.jsdelivr.net/gh/nflverse/nflfastR-roster/data/roster.csv";
+    const ROSTER_URLS = [
+      "https://cdn.jsdelivr.net/gh/nflverse/nflfastR-roster/data/roster.csv",
+      "https://raw.githubusercontent.com/nflverse/nflfastR-roster/master/data/roster.csv"
+    ];
 
     // CSV parser that handles quotes/commas
     function parseCSV(text){
@@ -125,7 +128,65 @@
     els.clearBtn.addEventListener('click',()=>{ if(!confirm('Clear all selections?')) return; state.bySlot={}; document.querySelectorAll('[data-name]').forEach(n=>n.textContent='Empty'); updateLineupList(); });
 
     // Bootstrap: load roster + wire clicks
-    async function bootstrap(){ try{ els.status.textContent='Loading roster…'; els.status.classList.remove('hidden'); const res=await fetch(ROSTER_URL,{cache:'force-cache'}); const text=await res.text(); const rows=parseCSV(text); const map=new Map(); for(const r of rows){ const name=(r.full_name||r.player_name||'').trim(); const pos=(r.position||'').trim(); if(!name||!pos) continue; const key=name+'|'+pos; const season=r.season||r.seasons||''; if(!map.has(key)) map.set(key,{name, position:pos, seasons:season}); } state.pool=[...map.values()].map(p=>({...p,name_l:p.name.toLowerCase()})); els.status.classList.add('hidden'); document.querySelectorAll('.pos').forEach(el=> el.addEventListener('click',()=>openPicker(el.dataset.slot)) ); updateLineupList(); } catch(e){ console.error(e); els.status.textContent='Failed to load roster data.'; els.status.classList.remove('hidden'); } }
+    async function fetchFirstWorking(urls){
+      let lastErr;
+      for (const u of urls){
+        try {
+          const res = await fetch(u, {cache:'force-cache', mode:'cors'});
+          if (!res.ok) throw new Error('HTTP '+res.status);
+          const txt = await res.text();
+          if (!txt || txt.length < 1000) throw new Error('Unexpected small file');
+          return txt;
+        } catch(e){ lastErr = e; }
+      }
+      throw lastErr || new Error('All sources failed');
+    }
+
+    async function bootstrap(){
+      try{
+        els.status.textContent='Loading roster…';
+        els.status.classList.remove('hidden');
+        // Try multiple mirrors; fall back to a tiny built-in list
+        let text;
+        try {
+          text = await fetchFirstWorking(ROSTER_URLS);
+        } catch(e){
+          console.warn('Remote roster failed, using fallback', e);
+          // Minimal fallback CSV: full_name,position,season
+          text = 'full_name,position,season
+Tom Brady,QB,2000-2022
+Joe Montana,QB,1979-1994
+Peyton Manning,QB,1998-2015
+Jerry Rice,WR,1985-2004
+Randy Moss,WR,1998-2012
+Jim Brown,RB,1957-1965
+Walter Payton,RB,1975-1987
+Rob Gronkowski,TE,2010-2021
+Jason Kelce,C,2011-2023
+Anthony Munoz,T,1980-1992
+Larry Allen,G,1994-2007';
+        }
+        const rows = parseCSV(text);
+        const map = new Map();
+        for (const r of rows){
+          const name = (r.full_name || r.player_name || '').trim();
+          const pos  = (r.position || '').trim();
+          if (!name || !pos) continue;
+          const key = name+'|'+pos;
+          const season = (r.season || r.seasons || '').toString();
+          if (!map.has(key)) map.set(key, { name, position: pos, seasons: season });
+        }
+        state.pool = [...map.values()].map(p=>({...p, name_l: p.name.toLowerCase()}));
+        els.poolCount.textContent = `Loaded players: ${state.pool.length.toLocaleString()}`;
+        els.status.classList.add('hidden');
+        document.querySelectorAll('.pos').forEach(el=> el.addEventListener('click',()=>openPicker(el.dataset.slot)) );
+        updateLineupList();
+      } catch(e){
+        console.error(e);
+        els.status.textContent='Failed to load roster data.';
+        els.status.classList.remove('hidden');
+      }
+    }
 
     bootstrap();
   </script>
