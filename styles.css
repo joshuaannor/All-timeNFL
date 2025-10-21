@@ -1,0 +1,71 @@
+:root {
+  --brand: #d32f2f;
+  --brand-dark: #b71c1c;
+}
+
+body {
+  background: #0b0d12;
+}
+
+.glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(8px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.field {
+  position: relative;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.2)),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 50px),
+    #1f7a45;
+  box-shadow: inset 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.pos {
+  position: absolute;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  outline: 2px solid rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.15s ease;
+}
+
+.pos:hover {
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+}
+
+.pos .abbr {
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.pos .name {
+  font-size: 0.65rem;
+  line-height: 0.75rem;
+  opacity: 0.95;
+}
+
+/* Simple custom modal (more compatible than <dialog>) */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 40;
+}
+
+.overlay.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.listItem:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
